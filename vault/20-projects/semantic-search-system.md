@@ -4,7 +4,7 @@ status: active
 tags: [rag, embeddings, python, chromadb]
 started: 2024-01-10
 summary: Semantic search over a local markdown vault using Voyage AI embeddings and ChromaDB.
-repo: https://github.com/yourusername/obsidian-rag-brain
+repo: https://github.com/reasonequals/reasons-obsidian-rag-brain
 ---
 
 # Semantic Search System

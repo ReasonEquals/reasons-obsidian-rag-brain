@@ -1,4 +1,4 @@
-# obsidian-rag-brain
+# reasons-obsidian-rag-brain
 
 Semantic search and structured querying over a local Obsidian vault. A personal knowledge OS template demonstrating LLMOps patterns: H2-aware chunking, asymmetric embedding, incremental indexing, SQLite as a queryable metadata mirror, and pre-computed agent context.
 
