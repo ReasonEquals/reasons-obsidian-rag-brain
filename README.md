@@ -130,10 +130,11 @@ pip install -r requirements.txt
 
 # 3. Configure environment
 cp .env.example .env
-# Edit .env: set VAULT_PATH, DB_PATH, and VOYAGE_API_KEY
+# Edit .env: set VAULT_PATH, DB_PATH, VOYAGE_API_KEY, and ANTHROPIC_API_KEY
 
-# 4. Get a Voyage AI API key (free tier, no credit card required)
-# https://www.voyageai.com → Sign up → API Keys
+# 4. Get API keys (both free tier / low cost)
+# Voyage AI: https://www.voyageai.com → Sign up → API Keys
+# Anthropic: https://console.anthropic.com → API Keys
 
 # 5. Sync vault frontmatter to SQLite
 python brain/sync.py --once
@@ -143,9 +144,10 @@ python brain/sync.py --once
 python brain/index.py
 # Expected: Found 8 markdown files / Changed: 8 files → N chunks / Embedding N chunks... done
 
-# 7. Search
+# 7. Search (synthesized answer + sources)
 python brain/search.py "what chunking strategy did I decide on?"
-# Expected: results from vault/40-reference/rag-architecture-notes.md with score < 0.35
+# Expected: Claude synthesis above a ranked source list
+# Skip synthesis: python brain/search.py "query" --no-synth
 
 # 8. Generate agent context snapshot (optional)
 python brain/context_snapshot.py
@@ -210,7 +212,7 @@ Add patterns to `SKIP_PATTERNS` in `brain/index.py` for directories you don't wa
 Natural next steps, ordered by complexity:
 
 - **Add metadata filters to search:** Pass a `where` dict to `collection.query()` — filter by `status`, `tags`, or `source` prefix before semantic ranking.
-- **Wire search output to Claude:** `search.py` returns the most relevant chunks. Pass them to the Claude API as context for a question-answering step — the retrieval is done, wiring to an LLM call is a few lines.
+- **Tune synthesis prompt:** `search.py` already synthesizes via Claude Haiku. Swap the model, adjust `max_tokens`, or change the prompt in `synthesize()` to match your use case.
 - **Scheduled context refresh:** Wire `context_snapshot.py` to run after every sync (git post-commit hook, launchd/cron). The agent context file stays current automatically.
 - **Swap the embedding model:** Only `embed_texts()` in `brain/index.py` touches Voyage AI. To switch to a local model (Ollama, sentence-transformers) or a different API (OpenAI), replace that one function.
 - **Scale the vector store:** ChromaDB is local and single-process. For multi-user or hosted deployments, swap `chromadb.PersistentClient` for Qdrant, Weaviate, or Pinecone — `collection.upsert()` and `collection.query()` are the only ChromaDB-specific surface.
@@ -223,7 +225,7 @@ Natural next steps, ordered by complexity:
 |------|---------------------|
 | [`brain/chunker.py`](brain/chunker.py) | H2 structural chunking, frontmatter separation, minimum-word merge, duplicate slug deduplication |
 | [`brain/index.py`](brain/index.py) | Asymmetric embedding (query vs. document), incremental indexing via MD5 hash, stale chunk cleanup, SQLite mirror, rate-limit retry backoff |
-| [`brain/search.py`](brain/search.py) | Cosine distance → similarity conversion, score interpretation thresholds, query logging to SQLite |
+| [`brain/search.py`](brain/search.py) | Cosine distance → similarity conversion, Claude Haiku synthesis, score thresholds, query logging to SQLite |
 | [`brain/sync.py`](brain/sync.py) | Frontmatter → SQLite upsert-on-conflict, orphan cleanup, watch mode with delete handling, idempotent schema creation |
 | [`brain/context_snapshot.py`](brain/context_snapshot.py) | Pre-computed agent context pattern, write-if-changed to avoid watcher churn |
 | [`vault/`](vault/) | Sample knowledge base — run the demo against this before pointing at your own vault |
