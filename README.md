@@ -121,7 +121,7 @@ See [`brain/index.py:run_index()`](brain/index.py).
 
 ```bash
 # 1. Clone and create a virtual environment
-git clone https://github.com/yourusername/reasons-obsidian-rag-brain.git
+git clone https://github.com/ReasonEquals/reasons-obsidian-rag-brain.git
 cd reasons-obsidian-rag-brain
 python3 -m venv .venv && source .venv/bin/activate
 
