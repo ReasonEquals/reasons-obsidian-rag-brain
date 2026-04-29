@@ -384,6 +384,11 @@ def run_watch() -> None:
                 print(f"\n→ Created: {event.src_path}")
                 run_sync()
 
+        def on_deleted(self, event):
+            if event.src_path.endswith(".md"):
+                print(f"\n→ Deleted: {event.src_path}")
+                run_sync()
+
     observer = Observer()
     observer.schedule(VaultHandler(), str(VAULT_PATH), recursive=True)
     observer.start()
