@@ -70,6 +70,7 @@ SKIP_PATTERNS = [
     ".claude/",
     "_assets/",
     "_data/",
+    "_checkpoints/",
 ]
 
 # Voyage API batch limit — keep batches small to stay under rate limits.
@@ -432,10 +433,18 @@ def run_index(force: bool = False) -> None:
     all_chunks = []
     changed_files = []
     skipped_files = []
+    parse_errors = []
 
     for rel_path, content in vault_files:
         current_hash = file_hash(content)
-        chunks = chunk_markdown(content, rel_path)
+        try:
+            chunks = chunk_markdown(content, rel_path)
+        except Exception as exc:
+            # Malformed YAML frontmatter or other chunker failure — skip the
+            # file but keep indexing the rest of the vault. One bad file
+            # should not abort the whole pass.
+            parse_errors.append((rel_path, str(exc).splitlines()[0]))
+            continue
 
         if not force and stored_hashes.get(rel_path) == current_hash:
             skipped_files.append(rel_path)
@@ -450,6 +459,10 @@ def run_index(force: bool = False) -> None:
 
     print(f"Changed: {len(changed_files)} files → {len(all_chunks)} chunks")
     print(f"Skipped: {len(skipped_files)} files (unchanged)")
+    if parse_errors:
+        print(f"Parse errors: {len(parse_errors)} file(s) skipped")
+        for rel, err in parse_errors:
+            print(f"  ⚠ {rel}: {err}")
     print()
 
     if not all_chunks:
